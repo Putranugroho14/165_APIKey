@@ -1,13 +1,12 @@
 const express = require('express');
 const path = require('path');
 const crypto = require('crypto');
-//KONEKSI DATABASE ---
+// KONEKSI DATABASE ---
 require('dotenv').config(); 
 const mysql = require('mysql2/promise'); 
 
 const app = express();
-const port = process.env.PORT || 3000; 
-
+const port = process.env.PORT || 3000;
 // Konfigurasi Pool Koneksi Database
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
@@ -18,3 +17,16 @@ const pool = mysql.createPool({
     connectionLimit: 10,
 });
 
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Endpoint test (tetap)
+app.get('/test', (req, res) => {
+    res.send('Hello World!');
+});
+
+// Endpoint utama: kirim file index.html (tetap)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
