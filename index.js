@@ -57,3 +57,48 @@ app.post('/create', async (req, res) => {
     }
 });
 
+// 🔎 ROUTE /CEKAPI: Validasi API Key dari Database
+app.post('/cekapi', async (req, res) => {
+    const apiKey = req.body.key; 
+    
+    if (!apiKey) {
+        return res.status(400).json({ status: 'Invalid', message: 'API Key harus disertakan.' });
+    }
+
+    try {
+        const [rows] = await pool.execute(
+            'SELECT is_active FROM api_keys WHERE api_key = ?', 
+            [apiKey]
+        );
+
+        if (rows.length === 0) {
+            // Key tidak ditemukan
+            return res.status(401).json({ status: 'Invalid', message: 'API Key tidak ditemukan di database.' });
+        }
+        
+        // Key ditemukan
+        if (rows[0].is_active) {
+            // Key aktif
+            return res.json({ status: 'Valid', message: 'API Key terdaftar dan aktif.' });
+        } else {
+            // Key tidak aktif
+            return res.status(403).json({ status: 'Inactive', message: 'API Key terdaftar, tetapi tidak aktif.' });
+        }
+
+    } catch (error) {
+        console.error('Error saat mengecek API Key:', error);
+        res.status(500).json({ status: 'error', message: 'Gagal menjalankan kueri database.' });
+    }
+});
+
+// Jalankan server dan cek koneksi database
+app.listen(port, async () => {
+    try {
+        // Pengecekan koneksi saat startup
+        await pool.getConnection();
+        console.log('✅ KONEKSI DATABASE APYKEY BERHASIL!');
+    } catch (e) {
+        console.error('❌ GAGAL KONEKSI KE DATABASE! Cek .env dan status MySQL server Anda.', e.message);
+    }
+    console.log(`🚀 Server berjalan di http://localhost:${port}`);
+});
