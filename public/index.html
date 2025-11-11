@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Generator Pro</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>API Generator</h1>
+        </header>
+
+        <main>
+            <section class="generator-section">
+                <button id="generateApiBtn">Buat API</button>
+                <div class="result-box">
+                    <textarea id="apiResult" readonly placeholder="Hasil API akan muncul di sini..."></textarea>
+                    <button id="copyToClipboardBtn" class="copy-button">Salin</button>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2023 API Generator. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+    // 1. Fungsi Asynchronous untuk Memanggil Endpoint Express
+    async function generateApiKey() {
+        const resultTextarea = document.getElementById('apiResult');
+        const generateBtn = document.getElementById('generateApiBtn');
+        
+        // Tunjukkan bahwa server sedang bekerja
+        resultTextarea.value = "Sedang menghubungi server Express...";
+        generateBtn.disabled = true; // Nonaktifkan tombol saat proses
+
+        try {
+            // Panggil endpoint POST /create di server Express Anda
+            const response = await fetch('/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+                // Tidak perlu body, karena server Anda tidak memerlukannya
+            });
+
+            if (!response.ok) {
+                // Tangani respons HTTP yang gagal (misalnya 404 atau 500)
+                throw new Error(`Gagal dari server: Status ${response.status}`);
+            }
+
+            // Ambil data JSON dari server
+            const data = await response.json(); 
+            
+            // Tampilkan API Key yang sebenarnya dari server
+            const apiKey = data.apiKey || 'Error: Key tidak ditemukan.';
+            
+            // Format output agar terlihat seperti respons API sungguhan
+            resultTextarea.value = 
+
+` ${apiKey},
+  "created_at": "${new Date().toISOString()}"`;
+
+        } catch (error) {
+            // Tangani kegagalan jaringan atau server mati
+            console.error("Gagal membuat API Key:", error);
+            resultTextarea.value = `❌ KONEKSI GAGAL! Pastikan server Express (index.js) sedang berjalan. Detail: ${error.message}`;
+        } finally {
+            generateBtn.disabled = false; // Aktifkan kembali tombol
+        }
+    }
+
+    // 2. Listener untuk Tombol 'Buat API'
+    document.getElementById('generateApiBtn').addEventListener('click', generateApiKey);
+
+    // 3. Listener untuk Tombol 'Salin'
+    document.getElementById('copyToClipboardBtn').addEventListener('click', () => {
+        const resultTextarea = document.getElementById('apiResult');
+        
+        // Pilih seluruh teks
+        resultTextarea.select(); 
+        
+        // Untuk dukungan browser yang lebih luas (meskipun sudah usang)
+        document.execCommand('copy'); 
+        
+        alert('API Key berhasil disalin!');
+    });
+</script>
+</body>
+</html>
