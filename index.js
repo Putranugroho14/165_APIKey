@@ -30,3 +30,30 @@ app.get('/test', (req, res) => {
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// 🚀 ROUTE /CREATE: Membuat dan Menyimpan API Key ke Database
+app.post('/create', async (req, res) => {
+    
+    // 1. Buat Key (Logika lama, tapi dipertahankan)
+    const randomBytes = crypto.randomBytes(16).toString('hex').toUpperCase();
+    const apiKey = `Putra-${randomBytes.slice(0, 8)}-${randomBytes.slice(8, 16)}-${randomBytes.slice(16, 24)}-${randomBytes.slice(24, 32)}`;
+
+    // 2. Simpan ke Database
+    try {
+        const sql = 'INSERT INTO api_keys (api_key) VALUES (?)';
+        // Menyimpan key baru, created_at akan otomatis diisi oleh MySQL
+        const [result] = await pool.execute(sql, [apiKey]); 
+        
+        // 3. Kirim respons sukses
+        res.json({ 
+            apiKey, 
+            status: 'success', 
+            message: 'API Key berhasil dibuat dan disimpan.',
+            id: result.insertId
+        });
+    } catch (error) {
+        console.error('Error saat menyimpan API Key:', error);
+        res.status(500).json({ status: 'error', message: 'Gagal menyimpan ke database.' });
+    }
+});
+
